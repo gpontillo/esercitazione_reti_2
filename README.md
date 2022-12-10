@@ -1,4 +1,4 @@
-# Esercizio Reti: "Assegnazione UDP-DNS"
+# Esercizio Reti: "Assegnazione UDP-DNS - Conta vocali"
 ## Traccia
 
 Di seguito è riportata la traccia di riferimento che possiamo ritrovare anche al questo [link](https://elearning.di.uniba.it/pluginfile.php/98160/mod_resource/content/1/Assegnazione%20UPD%202223%20Reti%20ITPS.pdf).

@@ -85,7 +85,7 @@ int main()
 
 	//COSTRUZIONE INDIRIZZO SERVER
 
-	memeset(&echoServerAddress, 0 ,sizeof(echoServerAddress));
+	memset(&echoServerAddress, 0 ,sizeof(echoServerAddress));
 	echoServerAddress.sin_family= AF_INET;
 	echoServerAddress.sin_port = htons(PORT);
 	echoServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -95,14 +95,14 @@ int main()
 	if((bind(serverSocket, (struct sockaddr*)&echoServerAddress, sizeof(echoServerAddress))) < 0)
 	{
 		errorHandler("Funzione bind() fallita!\n");
-		closeConnetction(serverSocket);
+		closeConnection(serverSocket);
 	}
 
 
 	char stringOfOK = "Ok"; //stringa di OK
 	int vowelReceived; //dimensine del messaggio ricevuto
 	char echoVowel; //vocale da stampare
-	char sendUpperVowel; //vocali convertire in maiuscolo da inviare
+	char upperVowel; //vocali convertire in maiuscolo da inviare
 
 	while(true)
 	{
@@ -117,7 +117,7 @@ int main()
 
 		//Invio di messaggio ok
 
-		if((sendto(serverSocket, stringOfOK, sizeof(stringOfOK), (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != sizeof(stringOfOK))
+		if((sendto(serverSocket, stringOfOK, sizeof(stringOfOK), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != sizeof(stringOfOK))
 		{
 			errorHandler("sendto() ha inviato un numero di byte innaspettato");
 			closeConnection(serverSocket);
@@ -130,9 +130,9 @@ int main()
 
 
 		//Invio delle vocali convertite in maiuscolo
-		sendUpperVowel = toupper(echoVowel);
+		upperVowel = toupper(echoVowel);
 
-		if((sendto(serverSocket, sendUpperVowel, sizeof(sendUpperVowel), (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != sizeof(sendUpperVowel))
+		if((sendto(serverSocket, upperVowel, sizeof(upperVowel), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != sizeof(upperVowel))
 		{
 			errorHandler("sendto() ha inviato un numero di byte innaspettato");
 			closeConnection(serverSocket);

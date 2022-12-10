@@ -127,7 +127,11 @@ int main(void) {
 	// Conteggio e invio delle vocali
 	int vowels = 0;
 	int bufferLen = strlen(buffer);
-	for(int i = 0; i < bufferLen; i++) {
+
+	int i;
+	i = 0;
+
+	while(i < bufferLen) {
 
 		// Controllo se la i-esima lettera è una vocale
 		if(buffer[i] == 'A' || buffer[i] == 'a' || buffer[i] == 'E' || buffer[i] == 'e' || buffer[i] == 'I' || buffer[i] == 'i' || buffer[i] == 'O' || buffer[i] == 'o' || buffer[i] == 'U' || buffer[i] == 'u') {
@@ -154,6 +158,8 @@ int main(void) {
 			bufferRecv[respLen] = '\0';
 			printf("Received vowel: %s\n", bufferRecv);
 		}
+
+		i++;
 	}
 
 	closeConnection(clientSocket);

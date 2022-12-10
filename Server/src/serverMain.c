@@ -22,9 +22,7 @@
 #include <stdbool.h>
 
 #define PORT 5555		 // numero di porta di default
-#define MAX_CONNECTIONS 6 // numero massimo di connessioni accettate dal Server
-#define BUFFER_SIZE 1024 // dimensione del buffer
-
+#define LENGTH 255		 // dimensione stringa
 
 // FUNZIONE PER GESTIONE ERRORI
 void errorHandler(char *messaggioDiErrore)
@@ -50,159 +48,67 @@ void closeConnection(int mySocket)
 
 int main()
 {
-
+	//INIZIALIZZAZIONE WINSOCK
 	#if defined WIN32
 
-	//INIZIALIZZAZIONE DELLA WINSOCK
 	WSADATA wsaData;
-	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	int result = WSAStartup(MAKEWORD(2,2), &wsaData);
 
-	if (result != 0)
+	if(result != 0)
 	{
-		errorHandler("Errore! Funzione WSAStartup() fallita.\n");
-		return 0;
+		errorHandler("Errore di WSAStartup!\n");
+		return -1;
 	}
 
 	#endif
 
-	// CREAZIONE DELLA SOCKET
 	int serverSocket;
-	serverSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	struct sockaddr_in echoServerAddress;
+	struct sockaddr_in echoClientAddress;
 
-	if (serverSocket < 0)
+	int clientAddressLength;
+	char echo[LENGTH];
+	int sizeOfRecived;
+
+
+	//CREAZIONE SOCKET
+
+	if((serverSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 	{
-		errorHandler("Errore! Creazione della socket fallita.\n");
-		clearWinSock();
+		errorHandler("Funzione socket() fallita!\n");
 		return -1;
 	}
 
-	// ASSEGNAZIONE INDIRIZZO PER LA SOCKET
-	struct sockaddr_in socketAddress;
 
-	memset(&socketAddress, 0, sizeof(socketAddress));
+	//COSTRUZIONE INDIRIZZO SERVER
 
-	socketAddress.sin_family = AF_INET; //famiglia protocolli
-	socketAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); //indirizzo IP Server
-	socketAddress.sin_port = htons(PORT); //numero di porta del Server
+	memeset(&echoServerAddress, 0 ,sizeof(echoServerAddress));
+	echoServerAddress.sin_family= AF_INET;
+	echoServerAddress.sin_port = htons(PORT);
+	echoServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-	// ASSOCIAMENTO DI UN INDIRIZZO ALLA SOCKET
-	if (bind(serverSocket, (struct sockaddr *)&socketAddress, sizeof(socketAddress)) < 0)
+	//BIND SOCKET
+
+	if((bind(serverSocket, (struct sockaddr*)&echoServerAddress, sizeof(echoServerAddress))) < 0)
 	{
-		errorHandler("Errore! Funzione bind() fallita.\n");
-		closesocket(serverSocket);
-		clearWinSock();
+		errorHandler("Funzione bind() fallita!\n");
 		return -1;
 	}
 
-	// ASCOLTO DI EVENTUALI CONNESSIONI
-	if (listen(serverSocket, MAX_CONNECTIONS) < 0)
-	{
-		errorHandler("Errore! Funzione listen() fallita.\n");
-		closesocket(serverSocket);
-		clearWinSock();
-		return -1;
-	}
-
-	struct sockaddr_in clientAddress; // struttura per l'indirizzo del Client
-	int clientSocket;				  // descrittore per la socket Client
-	int clientLen;					  // dimensione dell'indirizzo del Client
+	//RICEZIONE STRINGA DI ECHO DA PARTE DEL CLIENT
 
 	while(true)
 	{
-		printf("In attesa di connessione da parte di un client...\n");
 
+		clientAddressLength = sizeof(echoClientAddress);
 
-		clientLen = sizeof(clientAddress); // dimensione dell'indirizzo del Client
+		sizeOfRecived = recvfrom(serverSocket, echo, LENGTH, 0,(struct sockaddr*)&echoClientAddress, &clientAddressLength);
 
-		//ACCETTAZIONE DI NUOVE CONNESSIONI
-		clientSocket = accept(serverSocket, (struct sockaddr *)&clientAddress, &clientLen);
+		printf("Gestione client %s\n", inet_ntoa(echoClientAddress));
 
-		if (clientSocket < 0)
-		{
-			errorHandler("Errore! Funzione accept() fallita.\n");
-			closeConnection(serverSocket);
-			return 0;
-		}
-
-		// VISUALIZZAZIONE IP DEL CLIENT
-		printf("Connessione avvenuta con il client: %s\n\n", inet_ntoa(clientAddress.sin_addr));
-
-		// GESTIONE DELLA CONNESSIONE COL SERVER
-
-		char buffer[BUFFER_SIZE];
-
-		// Invio della stringa di connessione
-		strcpy(buffer, "Connessione avvenuta\n");
-		if (send(clientSocket, buffer, BUFFER_SIZE, 0) <= 0)
-		{
-			errorHandler("Errore! funzione send() fallita.\n");
-			closeConnection(serverSocket);
-			return -1;
-		}
-
-		int fine = 0;
-
-		// Ciclo do-while fin quando non riceviamo una stringa 'quit'
-		do
-		{
-
-			char stringA[BUFFER_SIZE] = "";
-			char stringB[BUFFER_SIZE] = "";
-			int bytesRcvd;
-
-			// Ricezione della stringa A
-			if ((bytesRcvd = recv(clientSocket, buffer, BUFFER_SIZE, 0)) <= 0)
-			{
-				errorHandler("Errore! Funzione recv() fallita.\n");
-				closesocket(clientSocket);
-				return -1;
-			}
-
-			strcpy(stringA, buffer);
-			printf("Stringa A: %s\n", stringA);
-
-			// Ricezione della stringa B
-			if ((bytesRcvd = recv(clientSocket, buffer, BUFFER_SIZE, 0)) <= 0)
-			{
-				errorHandler("Errore! Funzione recv() fallita.\n");
-				closeConnection(serverSocket);
-				return -1;
-			}
-
-
-			strcpy(stringB, buffer);
-			printf("Stringa B: %s\n", stringB);
-
-			//Se una delle due stringhe è uguale a 'quit'
-
-			if (strcmp(stringA, "quit") == 0 || strcmp(stringB, "quit") == 0)
-			{
-				strcpy(buffer, "bye");
-				fine = 1;
-
-				printf("Stringa con 'quit' individuata. Invio di 'bye' al client.\n");
-
-			}
-			else
-			{
-				//concatena le due stringhe
-				char stringConcat[BUFFER_SIZE] = "";
-				strcpy(stringConcat, stringA);
-				strcat(stringConcat, stringB);
-				strcpy(buffer, stringConcat);
-				printf("A+B: %s\n", stringConcat);
-			}
-
-			if (send(clientSocket, buffer, BUFFER_SIZE, 0) <= 0)
-			{
-				errorHandler("Errore! Funzione send() fallita.\n");
-				closeConnection(serverSocket);
-				return -1;
-			}
-			printf("---------------\n");
-
-		} while (!fine);
+		printf("Ricevuto: %s\n", echo);
 
 	}
+
 	return 0;
 }

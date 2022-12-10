@@ -24,7 +24,8 @@
 #define PORT 5555		 // numero di porta di default
 #define LENGTH 255		 // dimensione stringa
 
-// FUNZIONE PER GESTIONE ERRORI
+
+//FUNZIONE PER GESTIONE ERRORI
 void errorHandler(char *messaggioDiErrore)
 {
 	printf("%s", messaggioDiErrore);
@@ -39,7 +40,7 @@ void clearWinSock()
 	#endif
 }
 
-//FUNZIONE PER CHIUSURA DELLA CONNESSIONE
+//FUNZIONE PER CHIUSURA CONNESSIONE
 void closeConnection(int mySocket)
 {
 	closesocket(mySocket);

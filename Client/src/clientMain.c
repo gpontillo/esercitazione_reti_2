@@ -75,8 +75,8 @@ int main(void) {
 	// Input della stringa di echo
 	printf("Inserisci la stringa echo da inviare al server\n");
 	scanf("%s", echoString);
-	if ((echoStringLen = strlen(echoString)) > ECHOMAX)
-		ErrorHandler("echo word too long");
+	if ((echoStringLen = strlen(echoString)) > ECHO_MAX)
+		errorHandler("echo word too long");
 
 	// Creazione della socket
 	clientSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -87,20 +87,14 @@ int main(void) {
 	}
 
 	// Costruzione dell'indirizzo del server
-	char* inputForServer = "";
-	int inputIntForServer = 0;
 	char* ipServer = DEFAULT_IP;
 	int portServer = DEFAULT_PORT;
 
 	printf("Inserisci IP del server da contattare (default: '%s'): ", DEFAULT_IP);
 	scanf("%s", &ipServer);
-	if(inputForServer == "\n")
-		ipServer = inputForServer;
 
 	printf("Inserisci porta del server da contattare (default: '%d'): ", DEFAULT_PORT);
-	scanf("%d", &inputIntForServer);
-	if(inputIntForServer == '\n')
-		portServer = inputIntForServer;
+	scanf("%d", &portServer);
 
 	memset(&servAddr, 0, sizeof(servAddr));
 	servAddr.sin_family = PF_INET;
@@ -109,7 +103,7 @@ int main(void) {
 
 	// Invio della stringa echo al server
 	if (sendto(clientSocket, echoString, echoStringLen, 0, (struct sockaddr*)&servAddr, sizeof(servAddr)) != echoStringLen) {
-		ErrorHandler("sendto() sent different number of bytes than expected");
+		errorHandler("sendto() sent different number of bytes than expected");
 		exit(EXIT_FAILURE);
 	}
 
@@ -134,29 +128,32 @@ int main(void) {
 	int vowels = 0;
 	int bufferLen = strlen(buffer);
 	for(int i = 0; i < bufferLen; i++) {
+
+		// Controllo se la i-esima lettera è una vocale
 		if(buffer[i] == 'A' || buffer[i] == 'a' || buffer[i] == 'E' || buffer[i] == 'e' || buffer[i] == 'I' || buffer[i] == 'i' || buffer[i] == 'O' || buffer[i] == 'o' || buffer[i] == 'U' || buffer[i] == 'u') {
+
+			// Vocale trovata
 			vowels++;
+
+			// Invio della vocale trovata
+			printf("Sending server vowel: %c", buffer[i]);
 			if (sendto(clientSocket, buffer, bufferLen, 0, (struct sockaddr*)&servAddr, sizeof(servAddr)) != bufferLen) {
-				ErrorHandler("sendto() sent different number of bytes than expected");
+				errorHandler("sendto() sent different number of bytes than expected");
 				closeConnection(clientSocket);
 			}
-		}
-	}
 
-	// Ricezione delle vocali maiuscole
-	while(vowels > 0) {
-		vowels--;
-		char bufferRecv[BUFFER_SIZE] = "";
-		int respLen;
-		respLen = recvfrom(clientSocket, bufferRecv, ECHO_MAX, 0, (struct sockaddr*)&fromAddr, &fromSize);
+			// Ricezione della vocale maiuscola
+			char bufferRecv[BUFFER_SIZE] = "";
+			int respLen;
+			respLen = recvfrom(clientSocket, bufferRecv, ECHO_MAX, 0, (struct sockaddr*)&fromAddr, &fromSize);
 
-		if (servAddr.sin_addr.s_addr != fromAddr.sin_addr.s_addr)
-		{
-			fprintf(stderr, "Error: received a packet from unknown source.\n");
-			exit(EXIT_FAILURE);
+			if (servAddr.sin_addr.s_addr != fromAddr.sin_addr.s_addr) {
+				fprintf(stderr, "Error: received a packet from unknown source.\n");
+				exit(EXIT_FAILURE);
+			}
+			bufferRecv[respLen] = '\0';
+			printf("Received vowel: %s\n", bufferRecv);
 		}
-		bufferRecv[respLen] = '\0';
-		printf("Received: %s\n", bufferRecv);
 	}
 
 	closeConnection(clientSocket);

@@ -76,7 +76,7 @@ int main(void) {
 	printf("Inserisci la stringa echo da inviare al server\n");
 	scanf("%s", echoString);
 	if ((echoStringLen = strlen(echoString)) > ECHO_MAX)
-		errorHandler("echo word too long");
+		errorHandler("Echo word too long");
 
 	// Creazione della socket
 	clientSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);

@@ -26,14 +26,14 @@
 #define LENGTH 255		 // dimensione stringa
 
 
-//FUNZIONE PER GESTIONE ERRORI
+// Funzione per gestire eventuali errori
 void errorHandler(char *messaggioDiErrore)
 {
 	printf("%s", messaggioDiErrore);
 	system("pause");
 }
 
-// FUNZIONE PER TERMINARE L'USO DI WINSOCK
+// Funzione per terminare l'uso di Winsock
 void clearWinSock()
 {
 	#if defined WIN32
@@ -41,7 +41,7 @@ void clearWinSock()
 	#endif
 }
 
-//FUNZIONE PER CHIUSURA CONNESSIONE
+// Funzione per chiudere la connessione
 void closeConnection(int mySocket)
 {
 	closesocket(mySocket);
@@ -50,7 +50,7 @@ void closeConnection(int mySocket)
 
 int main()
 {
-	//INIZIALIZZAZIONE WINSOCK
+	// Inizializzazione della Winsock
 	#if defined WIN32
 
 	WSADATA wsaData;
@@ -64,6 +64,7 @@ int main()
 
 	#endif
 
+	// Inizializzazione variabile da utilizzare
 	int serverSocket;
 	struct sockaddr_in echoServerAddress;
 	struct sockaddr_in echoClientAddress;

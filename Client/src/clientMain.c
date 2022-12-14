@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <netdb.h>
 #endif
 
 #include <stdio.h>
@@ -22,10 +23,9 @@
 #include <string.h>
 
 #define ECHO_MAX 255
-#define BUFFER_SIZE 255  // Dimensione del buffer
-#define DEFAULT_PORT 5555 // Numero di porta di default
-#define DEFAULT_IP "127.0.0.1" // IP server di default
-
+#define BUFFER_SIZE 255		   // Dimensione del buffer
+#define DEFAULT_PORT 5555	   // Numero di porta di default
+#define DEFAULT_HOSTNAME "localhost" // IP server di default
 
 // Funzione per gestione errori
 void errorHandler(char *messaggioDiErrore)
@@ -35,10 +35,11 @@ void errorHandler(char *messaggioDiErrore)
 }
 
 // Funzione per terminare l'uso di winsock
-void clearWinSock() {
-	#if defined WIN32
+void clearWinSock()
+{
+#if defined WIN32
 	WSACleanup();
-	#endif
+#endif
 }
 
 // Funzione per chiusura connessione
@@ -48,29 +49,41 @@ void closeConnection(int mySocket)
 	clearWinSock();
 }
 
-int main(void) {
+int main(void)
+{
 
-	#if defined WIN32
+#if defined WIN32
 
-	//INIZIALIZZAZIONE DELLA WINSOCK
+	// INIZIALIZZAZIONE DELLA WINSOCK
 	WSADATA wsaData;
-	int result = WSAStartup(MAKEWORD(2,2), &wsaData);
+	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 
-	if (result != 0) {
+	if (result != 0)
+	{
 		errorHandler("Errore! Funzione WSAStartup() fallita\n");
 		return -1;
 	}
 
-	#endif
-	
+#endif
 	int clientSocket;
 	struct sockaddr_in servAddr;
 	struct sockaddr_in fromAddr;
 	unsigned int fromSize;
-	char echoString[ECHO_MAX];
 	char echoBuffer[ECHO_MAX];
-	int echoStringLen;
 	int respStringLen;
+	int i = 0;
+
+	// Creazione della socket
+	clientSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (clientSocket < 0)
+	{
+		errorHandler("Errore! Creazione della socket fallita.\n");
+		closeConnection(clientSocket);
+		return -1;
+	}
+
+	int echoStringLen;
+	char echoString[ECHO_MAX];
 
 	// Input della stringa di echo
 	printf("Inserisci la stringa echo da inviare al server\n");
@@ -78,38 +91,43 @@ int main(void) {
 	if ((echoStringLen = strlen(echoString)) > ECHO_MAX)
 		errorHandler("Echo word too long");
 
-	// Creazione della socket
-	clientSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (clientSocket < 0) {
-		errorHandler("Errore! Creazione della socket fallita.\n");
-		closeConnection(clientSocket);
-		return -1;
-	}
-
 	// Costruzione dell'indirizzo del server
-	char ipServer[20] = DEFAULT_IP;
+	char hostnameServer[20] = DEFAULT_HOSTNAME;
+	struct in_addr* ipServer;
 	int portServer = DEFAULT_PORT;
 
-	printf("Inserisci IP del server da contattare (default: '%s'): ", DEFAULT_IP);
-	scanf("%s", ipServer);
+	printf("Inserisci il nome dell'host del server da contattare (default: '%s'): ", DEFAULT_HOSTNAME);
+	scanf("%s", hostnameServer);
 
 	printf("Inserisci porta del server da contattare (default: '%d'): ", DEFAULT_PORT);
 	scanf("%d", &portServer);
 
+	// Recupero IP server a partire dal suo hostname
+	struct hostent *host;
+	host = gethostbyname(hostnameServer);
+	if (host == NULL) {
+		fprintf(stderr, "gethostbyname() failed.\n");
+		exit(EXIT_FAILURE);
+	} else {
+		ipServer = (struct in_addr*) host->h_addr_list[0];
+	}
+
+	// Costruzione dell'indirizzo del server con ip e porta dell'utente
 	memset(&servAddr, 0, sizeof(servAddr));
 	servAddr.sin_family = PF_INET;
 	servAddr.sin_port = htons(portServer);
-	servAddr.sin_addr.s_addr = inet_addr(ipServer);
+	servAddr.sin_addr.s_addr = inet_addr(inet_ntoa(*ipServer));
 
 	// Invio della stringa echo al server
-	if (sendto(clientSocket, echoString, echoStringLen, 0, (struct sockaddr*)&servAddr, sizeof(servAddr)) != echoStringLen) {
+	if (sendto(clientSocket, echoString, echoStringLen, 0, (struct sockaddr *)&servAddr, sizeof(servAddr)) != echoStringLen)
+	{
 		errorHandler("sendto() sent different number of bytes than expected");
 		exit(EXIT_FAILURE);
 	}
 
 	// Ritorno della stringa echo
 	fromSize = sizeof(fromAddr);
-	respStringLen = recvfrom(clientSocket, echoBuffer, ECHO_MAX, 0, (struct sockaddr*)&fromAddr, &fromSize);
+	respStringLen = recvfrom(clientSocket, echoBuffer, ECHO_MAX, 0, (struct sockaddr *)&fromAddr, &fromSize);
 
 	if (servAddr.sin_addr.s_addr != fromAddr.sin_addr.s_addr)
 	{
@@ -120,43 +138,48 @@ int main(void) {
 	printf("Received: %s\n", echoBuffer);
 
 	// Lettura stringa su cui contare le vocali
-	char buffer[BUFFER_SIZE] = "";
+	char stringVowels[BUFFER_SIZE] = "";
 	printf("Inserisci stringa su cui leggere le vocali:");
-	scanf("%s", &buffer);
+	scanf("%s", &stringVowels);
+
+	// Conteggio e invio delle vocali
+	int stringVowelsLen = strlen(stringVowels);
 
 	// Conteggio e invio delle vocali
 	int vowels = 0;
-	int bufferLen = strlen(buffer);
 
-	int i;
-	i = 0;
-
-	while(i < bufferLen) {
-
+	while (i < stringVowelsLen)
+	{
 		// Controllo se la i-esima lettera è una vocale
-		if(buffer[i] == 'A' || buffer[i] == 'a' || buffer[i] == 'E' || buffer[i] == 'e' || buffer[i] == 'I' || buffer[i] == 'i' || buffer[i] == 'O' || buffer[i] == 'o' || buffer[i] == 'U' || buffer[i] == 'u') {
+		if (stringVowels[i] == 'A' || stringVowels[i] == 'a' || stringVowels[i] == 'E' || stringVowels[i] == 'e' || stringVowels[i] == 'I' || stringVowels[i] == 'i' || stringVowels[i] == 'O' || stringVowels[i] == 'o' || stringVowels[i] == 'U' || stringVowels[i] == 'u')
+		{
 
 			// Vocale trovata
 			vowels++;
 
 			// Invio della vocale trovata
-			printf("Sending server vowel: %c", buffer[i]);
-			if (sendto(clientSocket, buffer, bufferLen, 0, (struct sockaddr*)&servAddr, sizeof(servAddr)) != bufferLen) {
-				errorHandler("sendto() sent different number of bytes than expected");
+			printf("Sending server vowel: %c\n", stringVowels[i]);
+			char vowelToSend[ECHO_MAX];
+			vowelToSend[0] = stringVowels[i];
+			vowelToSend[1] = '\0';
+			if (sendto(clientSocket, vowelToSend, sizeof(vowelToSend), 0, (struct sockaddr *)&servAddr, sizeof(servAddr)) != sizeof(vowelToSend))
+			{
+				errorHandler("sendto() sent different number of bytes than expected\n");
 				closeConnection(clientSocket);
 			}
 
 			// Ricezione della vocale maiuscola
 			char bufferRecv[BUFFER_SIZE] = "";
 			int respLen;
-			respLen = recvfrom(clientSocket, bufferRecv, ECHO_MAX, 0, (struct sockaddr*)&fromAddr, &fromSize);
+			respLen = recvfrom(clientSocket, bufferRecv, ECHO_MAX, 0, (struct sockaddr *)&fromAddr, &fromSize);
 
-			if (servAddr.sin_addr.s_addr != fromAddr.sin_addr.s_addr) {
+			if (servAddr.sin_addr.s_addr != fromAddr.sin_addr.s_addr)
+			{
 				fprintf(stderr, "Error: received a packet from unknown source.\n");
 				exit(EXIT_FAILURE);
 			}
 			bufferRecv[respLen] = '\0';
-			printf("Received vowel: %s\n", bufferRecv);
+			printf("Received vowel: %s\n---------\n", bufferRecv);
 		}
 
 		i++;

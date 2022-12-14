@@ -115,17 +115,11 @@ int main()
 
 		sizeOfReceived = recvfrom(serverSocket, echo, LENGTH, 0,(struct sockaddr*)&echoClientAddress, &clientAddressLength);
 
-
-
-
 		printf("\"%s\" ricevuto dal client con nome host: %s\n",echo,"Bestemmiaci dopo");
 
 
-
 		//Invio di messaggio ok
-
 		if((sendto(serverSocket, "Ok", sizeof("Ok"), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != strlen("Ok"))
-
 		{
 			errorHandler("sendto() ha inviato un numero di byte innaspettato");
 			closeConnection(serverSocket);

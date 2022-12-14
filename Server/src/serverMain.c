@@ -99,8 +99,7 @@ int main()
 	}
 
 
-	char stringOfOK = "Ok"; //stringa di OK
-	int vowelReceived; //dimensine del messaggio ricevuto
+	char vowelReceived; //dimensine del messaggio ricevuto
 	char echoVowel; //vocale da stampare
 	char upperVowel; //vocali convertire in maiuscolo da inviare
 
@@ -112,19 +111,19 @@ int main()
 
 		sizeOfReceived = recvfrom(serverSocket, echo, LENGTH, 0,(struct sockaddr*)&echoClientAddress, &clientAddressLength);
 
-		printf("%s ricevuto dal client con nome host: %s",echo);
+
 
 
 		//Invio di messaggio ok
 
-		if((sendto(serverSocket, stringOfOK, sizeof(stringOfOK), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != sizeof(stringOfOK))
+		if((sendto(serverSocket, "OK", sizeof("OK"), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != strlen("OK"))
 		{
 			errorHandler("sendto() ha inviato un numero di byte innaspettato");
 			closeConnection(serverSocket);
 		}
 
 		//Ricevzione delle vocali;
-		vowelReceived = recvfrom(serverSocket, echoVowel, LENGTH, 0,(struct sockaddr*)&echoClientAddress, &clientAddressLength);
+		vowelReceived = recvfrom(serverSocket, echoVowel, strlen(echoVowel), 0,(struct sockaddr*)&echoClientAddress, &clientAddressLength);
 
 		printf("Vocale ricevuta: %c", echoVowel);
 
@@ -132,7 +131,7 @@ int main()
 		//Invio delle vocali convertite in maiuscolo
 		upperVowel = toupper(echoVowel);
 
-		if((sendto(serverSocket, upperVowel, sizeof(upperVowel), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != sizeof(upperVowel))
+		if((sendto(serverSocket, vowelReceived, 1, 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != strlen(upperVowel))
 		{
 			errorHandler("sendto() ha inviato un numero di byte innaspettato");
 			closeConnection(serverSocket);

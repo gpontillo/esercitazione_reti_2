@@ -115,30 +115,7 @@ int main()
 
 		sizeOfReceived = recvfrom(serverSocket, echo, LENGTH, 0,(struct sockaddr*)&echoClientAddress, &clientAddressLength);
 
-		printf("\"%s\" ricevuto dal client con nome host: %s\n",echo,"Bestemmiaci dopo");
-
-
-		//Invio di messaggio ok
-		if((sendto(serverSocket, "Ok", sizeof("Ok"), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != strlen("Ok"))
-		{
-			errorHandler("sendto() ha inviato un numero di byte innaspettato");
-			closeConnection(serverSocket);
-		}
-
-		//Ricevzione delle vocali;
-		vowelReceived = recvfrom(serverSocket, echoVowel, strlen(echoVowel), 0,(struct sockaddr*)&echoClientAddress, &clientAddressLength);
-
-		printf("Vocale ricevuta: %c", echoVowel);
-
-
-		//Invio delle vocali convertite in maiuscolo
-		upperVowel = toupper(echoVowel);
-
-		if((sendto(serverSocket, vowelReceived, 1, 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != strlen(upperVowel))
-		{
-			errorHandler("sendto() ha inviato un numero di byte innaspettato");
-			closeConnection(serverSocket);
-		}
+		printf("Received %s", echo);
 
 	}
 

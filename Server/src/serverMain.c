@@ -36,22 +36,15 @@ void errorHandler(char *messaggioDiErrore)
 // Funzione per terminare l'uso di Winsock
 void clearWinSock()
 {
-#if defined WIN32
+	#if defined WIN32
 	WSACleanup();
-#endif
-}
-
-// Funzione per chiudere la connessione
-void closeConnection(int mySocket)
-{
-	closesocket(mySocket);
-	clearWinSock();
+	#endif
 }
 
 int main()
 {
-// Inizializzazione della Winsock
-#if defined WIN32
+	// Inizializzazione della Winsock
+	#if defined WIN32
 
 	WSADATA wsaData;
 	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -62,62 +55,63 @@ int main()
 		return -1;
 	}
 
-#endif
+	#endif
 
 	// Inizializzazione variabile da utilizzare
 	int serverSocket;
-	struct sockaddr_in echoServerAddress;
-	struct sockaddr_in echoClientAddress;
+	struct sockaddr_in serverAddress;
+	struct sockaddr_in clientAddress;
 
 	int clientAddressLength;
 	char echo[LENGTH];
 	int sizeOfReceived;
 
-	// CREAZIONE SOCKET
-
+	// Creazione socket
 	if ((serverSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
 	{
 		errorHandler("Funzione socket() fallita!\n");
-		closeConnection(serverSocket);
+		return -1;
 	}
 
-	// COSTRUZIONE INDIRIZZO SERVER
+	// Costruzione indririzzo del server
+	memset(&serverAddress, 0, sizeof(serverAddress));
+	serverAddress.sin_family = AF_INET; // famiglia di protocolli
+	serverAddress.sin_port = htons(PORT); // numeri di porta di default
+	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); //indirizzo IP del server
 
-	memset(&echoServerAddress, 0, sizeof(echoServerAddress));
-	echoServerAddress.sin_family = AF_INET;
-	echoServerAddress.sin_port = htons(PORT);
-	echoServerAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-	// BIND SOCKET
-
-	if ((bind(serverSocket, (struct sockaddr *)&echoServerAddress, sizeof(echoServerAddress))) < 0)
+	// Binding della socket
+	if ((bind(serverSocket, (struct sockaddr *)&serverAddress, sizeof(serverAddress))) < 0)
 	{
 		errorHandler("Funzione bind() fallita!\n");
-		closeConnection(serverSocket);
+		return -1;
 	}
 
 	char echoVowel[LENGTH];	 // vocale da stampare
 	char upperVowel[LENGTH]; // vocali convertire in maiuscolo da inviare
-	char *hostnameClient;
+	char *hostNameClient;    // hostname del client
 	struct hostent *host;
 
 	while (true)
 	{
-		// Ricezione messaggio iniziale
-		clientAddressLength = sizeof(echoClientAddress);
 
-		sizeOfReceived = recvfrom(serverSocket, echo, LENGTH, 0, (struct sockaddr *)&echoClientAddress, &clientAddressLength);
+		printf("In attesa di pacchetti da ricevere...\n\n");
 
-		host = gethostbyaddr((char *)&echoClientAddress.sin_addr, 4, AF_INET);
-		hostnameClient = host->h_name;
+		// Ricezione messaggio di echo iniziale
+		clientAddressLength = sizeof(clientAddress);
 
-		printf("\"%s\" ricevuto dal client con nome host: %s\n", echo, hostnameClient);
+		sizeOfReceived = recvfrom(serverSocket, echo, LENGTH, 0, (struct sockaddr *)&clientAddress, &clientAddressLength);
+
+		// Ottenimento del hostname mediante gethostbyaddr()
+		host = gethostbyaddr((char *)&clientAddress.sin_addr, 4, AF_INET);
+		hostNameClient = host->h_name;
+
+		printf("\"%s\" ricevuto dal client con hostname: %s\n\n", echo, hostNameClient);
 
 		// Invio di messaggio ok
-		if ((sendto(serverSocket, "Ok", sizeof("Ok"), 0, (struct sockaddr *)&echoClientAddress, sizeof(echoClientAddress))) != sizeof("Ok"))
+		if ((sendto(serverSocket, "Ok", sizeof("Ok"), 0, (struct sockaddr *)&clientAddress, sizeof(clientAddress))) != sizeof("Ok"))
 		{
 			errorHandler("sendto() ha inviato un numero di byte innaspettato\n");
-			closeConnection(serverSocket);
+			return -1;
 		}
 
 		while (true)
@@ -125,30 +119,33 @@ int main()
 			struct sockaddr_in vocalClientAddress;
 			int vocalClientAddressLength = sizeof(vocalClientAddress);
 
-			// Ricevzione delle vocali;
+			// Ricezione delle vocali;
 			sizeOfReceived = recvfrom(serverSocket, echoVowel, sizeof(echoVowel), 0, (struct sockaddr *)&vocalClientAddress, &vocalClientAddressLength);
 
+			//nel caso in cui si riceve una stringa che indica la fine delle operazione da parte del client
+			//il server ritorna in attesa di altri pacchetti di altri client
 			if (strcmp(echoVowel, "end") == 0)
 			{
 				break;
 			}
 			else
 			{
-				printf("Vocale ricevuta: %s\n---------\n", echoVowel);
+				printf("Vocale ricevuta: %s\n------------------\n", echoVowel);
 
-				if (echoClientAddress.sin_addr.s_addr != vocalClientAddress.sin_addr.s_addr)
+				if (clientAddress.sin_addr.s_addr != vocalClientAddress.sin_addr.s_addr)
 				{
-					fprintf(stderr, "Error: received a packet from unknown source.\n");
-					exit(EXIT_FAILURE);
+					errorHandler("Errore: è stato ricevuto un pacchetto da una fonte sconosciuta.\n");
+					return -1;
 				}
+
 				// Invio delle vocali convertite in maiuscolo
 				upperVowel[0] = toupper(echoVowel[0]);
 				upperVowel[1] = '\0';
 
-				if ((sendto(serverSocket, upperVowel, sizeof(upperVowel), 0, (struct sockaddr *)&echoClientAddress, sizeof(echoClientAddress))) != sizeof(upperVowel))
+				if ((sendto(serverSocket, upperVowel, sizeof(upperVowel), 0, (struct sockaddr *)&clientAddress, sizeof(clientAddress))) != sizeof(upperVowel))
 				{
 					errorHandler("sendto() ha inviato un numero di byte innaspettato\n");
-					closeConnection(serverSocket);
+					return -1;
 				}
 			}
 		}

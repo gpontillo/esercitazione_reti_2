@@ -99,7 +99,11 @@ int main()
 	}
 
 
+
 	char vowelReceived; //dimensine del messaggio ricevuto
+
+
+
 	char echoVowel; //vocale da stampare
 	char upperVowel; //vocali convertire in maiuscolo da inviare
 
@@ -114,9 +118,14 @@ int main()
 
 
 
+		printf("\"%s\" ricevuto dal client con nome host: %s\n",echo,"Bestemmiaci dopo");
+
+
+
 		//Invio di messaggio ok
 
-		if((sendto(serverSocket, "OK", sizeof("OK"), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != strlen("OK"))
+		if((sendto(serverSocket, "Ok", sizeof("Ok"), 0, (struct sockaddr*) &echoClientAddress, sizeof(echoClientAddress))) != strlen("Ok"))
+
 		{
 			errorHandler("sendto() ha inviato un numero di byte innaspettato");
 			closeConnection(serverSocket);

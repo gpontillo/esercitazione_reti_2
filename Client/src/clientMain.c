@@ -22,7 +22,7 @@
 #include <string.h>
 
 #define ECHO_MAX 255
-#define BUFFER_SIZE 1024  // Dimensione del buffer
+#define BUFFER_SIZE 255  // Dimensione del buffer
 #define DEFAULT_PORT 5555 // Numero di porta di default
 #define DEFAULT_IP "127.0.0.1" // IP server di default
 
@@ -87,11 +87,11 @@ int main(void) {
 	}
 
 	// Costruzione dell'indirizzo del server
-	char* ipServer = DEFAULT_IP;
+	char ipServer[20] = DEFAULT_IP;
 	int portServer = DEFAULT_PORT;
 
 	printf("Inserisci IP del server da contattare (default: '%s'): ", DEFAULT_IP);
-	scanf("%s", &ipServer);
+	scanf("%s", ipServer);
 
 	printf("Inserisci porta del server da contattare (default: '%d'): ", DEFAULT_PORT);
 	scanf("%d", &portServer);

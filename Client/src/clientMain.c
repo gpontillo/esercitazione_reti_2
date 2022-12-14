@@ -23,8 +23,8 @@
 #include <string.h>
 
 #define ECHO_MAX 255
-#define BUFFER_SIZE 255		   // Dimensione del buffer
-#define DEFAULT_PORT 5555	   // Numero di porta di default
+#define BUFFER_SIZE 255				 // Dimensione del buffer
+#define DEFAULT_PORT 5555			 // Numero di porta di default
 #define DEFAULT_HOSTNAME "localhost" // IP server di default
 
 // Funzione per gestione errori
@@ -93,7 +93,7 @@ int main(void)
 
 	// Costruzione dell'indirizzo del server
 	char hostnameServer[20] = DEFAULT_HOSTNAME;
-	struct in_addr* ipServer;
+	struct in_addr *ipServer;
 	int portServer = DEFAULT_PORT;
 
 	printf("Inserisci il nome dell'host del server da contattare (default: '%s'): ", DEFAULT_HOSTNAME);
@@ -105,11 +105,14 @@ int main(void)
 	// Recupero IP server a partire dal suo hostname
 	struct hostent *host;
 	host = gethostbyname(hostnameServer);
-	if (host == NULL) {
+	if (host == NULL)
+	{
 		fprintf(stderr, "gethostbyname() failed.\n");
 		exit(EXIT_FAILURE);
-	} else {
-		ipServer = (struct in_addr*) host->h_addr_list[0];
+	}
+	else
+	{
+		ipServer = (struct in_addr *)host->h_addr_list[0];
 	}
 
 	// Costruzione dell'indirizzo del server con ip e porta dell'utente
@@ -183,6 +186,12 @@ int main(void)
 		}
 
 		i++;
+	}
+
+	if (sendto(clientSocket, "end", sizeof("end"), 0, (struct sockaddr *)&servAddr, sizeof(servAddr)) != sizeof("end"))
+	{
+		errorHandler("sendto() sent different number of bytes than expected\n");
+		closeConnection(clientSocket);
 	}
 
 	closeConnection(clientSocket);

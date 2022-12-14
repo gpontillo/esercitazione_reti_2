@@ -98,49 +98,59 @@ int main()
 
 	char echoVowel[LENGTH];	 // vocale da stampare
 	char upperVowel[LENGTH]; // vocali convertire in maiuscolo da inviare
-	char* hostnameClient;
+	char *hostnameClient;
 	struct hostent *host;
 
-	// Ricezione messaggio iniziale
-	clientAddressLength = sizeof(echoClientAddress);
-
-	sizeOfReceived = recvfrom(serverSocket, echo, LENGTH, 0, (struct sockaddr *)&echoClientAddress, &clientAddressLength);
-
-	host = gethostbyaddr((char *) &echoClientAddress.sin_addr, 4, AF_INET);
-	hostnameClient = host->h_name;
-
-	printf("\"%s\" ricevuto dal client con nome host: %s\n", echo, hostnameClient);
-
-	// Invio di messaggio ok
-	if ((sendto(serverSocket, "Ok", sizeof("Ok"), 0, (struct sockaddr *)&echoClientAddress, sizeof(echoClientAddress))) != sizeof("Ok"))
-	{
-		errorHandler("sendto() ha inviato un numero di byte innaspettato\n");
-		closeConnection(serverSocket);
-	}
-	
 	while (true)
 	{
-		struct sockaddr_in vocalClientAddress;
-		int vocalClientAddressLength = sizeof(vocalClientAddress);
+		// Ricezione messaggio iniziale
+		clientAddressLength = sizeof(echoClientAddress);
 
-		// Ricevzione delle vocali;
-		sizeOfReceived = recvfrom(serverSocket, echoVowel, sizeof(echoVowel), 0, (struct sockaddr *)&vocalClientAddress, &vocalClientAddressLength);
+		sizeOfReceived = recvfrom(serverSocket, echo, LENGTH, 0, (struct sockaddr *)&echoClientAddress, &clientAddressLength);
 
-		printf("Vocale ricevuta: %s\n---------\n", echoVowel);
+		host = gethostbyaddr((char *)&echoClientAddress.sin_addr, 4, AF_INET);
+		hostnameClient = host->h_name;
 
-		if (echoClientAddress.sin_addr.s_addr != vocalClientAddress.sin_addr.s_addr)
-		{
-			fprintf(stderr, "Error: received a packet from unknown source.\n");
-			exit(EXIT_FAILURE);
-		}
-		// Invio delle vocali convertite in maiuscolo
-		upperVowel[0] = toupper(echoVowel[0]);
-		upperVowel[1] = '\0';
+		printf("\"%s\" ricevuto dal client con nome host: %s\n", echo, hostnameClient);
 
-		if ((sendto(serverSocket, upperVowel, sizeof(upperVowel), 0, (struct sockaddr *)&echoClientAddress, sizeof(echoClientAddress))) != sizeof(upperVowel))
+		// Invio di messaggio ok
+		if ((sendto(serverSocket, "Ok", sizeof("Ok"), 0, (struct sockaddr *)&echoClientAddress, sizeof(echoClientAddress))) != sizeof("Ok"))
 		{
 			errorHandler("sendto() ha inviato un numero di byte innaspettato\n");
 			closeConnection(serverSocket);
+		}
+
+		while (true)
+		{
+			struct sockaddr_in vocalClientAddress;
+			int vocalClientAddressLength = sizeof(vocalClientAddress);
+
+			// Ricevzione delle vocali;
+			sizeOfReceived = recvfrom(serverSocket, echoVowel, sizeof(echoVowel), 0, (struct sockaddr *)&vocalClientAddress, &vocalClientAddressLength);
+
+			if (strcmp(echoVowel, "end") == 0)
+			{
+				break;
+			}
+			else
+			{
+				printf("Vocale ricevuta: %s\n---------\n", echoVowel);
+
+				if (echoClientAddress.sin_addr.s_addr != vocalClientAddress.sin_addr.s_addr)
+				{
+					fprintf(stderr, "Error: received a packet from unknown source.\n");
+					exit(EXIT_FAILURE);
+				}
+				// Invio delle vocali convertite in maiuscolo
+				upperVowel[0] = toupper(echoVowel[0]);
+				upperVowel[1] = '\0';
+
+				if ((sendto(serverSocket, upperVowel, sizeof(upperVowel), 0, (struct sockaddr *)&echoClientAddress, sizeof(echoClientAddress))) != sizeof(upperVowel))
+				{
+					errorHandler("sendto() ha inviato un numero di byte innaspettato\n");
+					closeConnection(serverSocket);
+				}
+			}
 		}
 	}
 

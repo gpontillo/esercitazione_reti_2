@@ -87,9 +87,9 @@ int main()
 	}
 
 	char echoVowel[LENGTH];	 // vocale da stampare
-	char upperVowel[LENGTH]; // vocali convertire in maiuscolo da inviare
+	char upperVowel[LENGTH]; // vocali convertite in maiuscolo da inviare
 	char *hostNameClient;    // hostname del client
-	struct hostent *host;
+	struct hostent *host;	//struttura necessaria per utilizzare gethostbyaddress()
 
 	while (true)
 	{
@@ -132,13 +132,14 @@ int main()
 			{
 				printf("Vocale ricevuta: %s\n------------------\n", echoVowel);
 
+				// Controllo per vedere se gli indirizzi di server e client sono uguali
 				if (clientAddress.sin_addr.s_addr != vocalClientAddress.sin_addr.s_addr)
 				{
 					errorHandler("Errore: è stato ricevuto un pacchetto da una fonte sconosciuta.\n");
 					return -1;
 				}
 
-				// Invio delle vocali convertite in maiuscolo
+				// Conversione in maiuscolo e invio delle vocali
 				upperVowel[0] = toupper(echoVowel[0]);
 				upperVowel[1] = '\0';
 

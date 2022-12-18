@@ -25,7 +25,7 @@
 #define ECHO_MAX 255				 // Dimensione della stringa di echo
 #define SIZE 255				 	 // Dimensione del stringa per le vocali
 #define DEFAULT_PORT 5555			 // Numero di porta di default
-#define DEFAULT_HOSTNAME "localhost" // IP server di default
+#define DEFAULT_HOSTNAME "localhost" // Hostname di default
 
 // Funzione per gestione errori
 void errorHandler(char *messaggioDiErrore)
@@ -59,12 +59,13 @@ int main(void)
 
 	#endif
 
+	// Inizializzazione variabili da utilizzare
 	int clientSocket;
 	struct sockaddr_in serverAddress;
 	struct sockaddr_in fromAddress;
-	unsigned int fromSize;
-	char echoBuffer[ECHO_MAX];
-	int respStringLen;
+	int fromSize;
+	char echo[ECHO_MAX];
+	int responseStringLength;
 
 	// Creazione della socket
 	clientSocket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -100,8 +101,8 @@ int main(void)
 	scanf("%d", &portServer);
 	printf("\n");
 
-	// Recupero IP server a partire dal suo hostname
-	struct hostent *host;
+	// Recupero IP server a partire dal suo hostname mediante gethostbyname()
+	struct hostent *host; //struttura necessaria per utilizzare gethostbyname()
 	host = gethostbyname(hostNameServer);
 
 	if (host == NULL)
@@ -129,21 +130,22 @@ int main(void)
 
 	// Ritorno della stringa echo
 	fromSize = sizeof(fromAddress);
-	respStringLen = recvfrom(clientSocket, echoBuffer, ECHO_MAX, 0, (struct sockaddr *)&fromAddress, &fromSize);
+	responseStringLength = recvfrom(clientSocket, echo, ECHO_MAX, 0, (struct sockaddr *)&fromAddress, &fromSize);
 
+	//Controllo per vedere se gli indirizzi di server e client sono uguali
 	if (serverAddress.sin_addr.s_addr != fromAddress.sin_addr.s_addr)
 	{
 		errorHandler("Errore! E' stato ricevuto un pacchetto da una fonte sconosciuta.\n");
 		return -1;
 	}
 
-	echoBuffer[respStringLen] = '\0';
-	printf("Ricevuto: %s\n", echoBuffer);
+	echo[responseStringLength] = '\0';
+	printf("Ricevuto: %s\n", echo);
 
 	// Lettura stringa su cui contare le vocali
 	char stringVowels[SIZE] = "";
 	printf("Inserisci stringa su cui leggere le vocali:");
-	scanf("%s", &stringVowels);
+	scanf("%s", stringVowels);
 	printf("\n");
 
 	int stringVowelsLen = strlen(stringVowels);
@@ -174,6 +176,7 @@ int main(void)
 			respLen = recvfrom(clientSocket, bufferRecv, ECHO_MAX, 0, (struct sockaddr *)&fromAddress, &fromSize);
 
 
+			// Controllo per vedere se gli indirizzi di server e client sono uguali
 			if (serverAddress.sin_addr.s_addr != fromAddress.sin_addr.s_addr)
 			{
 				errorHandler("Errore! E' stato ricevuto un pacchetto da una fonte sconosciuta\n");

@@ -89,7 +89,7 @@ int main()
 	char echoVowel[LENGTH];	 // vocale da stampare
 	char upperVowel[LENGTH]; // vocali convertite in maiuscolo da inviare
 	char *hostNameClient;    // hostname del client
-	struct hostent *host;	//struttura necessaria per utilizzare gethostbyaddress()
+	struct hostent *host;	//struttura necessaria per utilizzare gethostbyaddr()
 
 	while (true)
 	{

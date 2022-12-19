@@ -1,6 +1,6 @@
 /*
  ============================================================================
- Name        : client.c
+ Name        : clientMain.c
  Author      :
  Version     :
  Copyright   : Your copyright notice

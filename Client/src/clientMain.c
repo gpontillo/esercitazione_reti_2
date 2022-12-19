@@ -23,7 +23,7 @@
 #include <string.h>
 
 #define ECHO_MAX 255				 // Dimensione della stringa di echo
-#define SIZE 255				 	 // Dimensione del stringa per le vocali
+#define SIZE 255				 // Dimensione del stringa per le vocali
 #define DEFAULT_PORT 5555			 // Numero di porta di default
 #define DEFAULT_HOSTNAME "localhost" // Hostname di default
 

@@ -1,6 +1,6 @@
 /*
  ============================================================================
- Name        : server.c
+ Name        : serverMain.c
  Author      :
  Version     :
  Copyright   : Your copyright notice
@@ -23,8 +23,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define PORT 5555  // numero di porta di default
-#define LENGTH 255 // dimensione stringa
+#define PORT 5555  		// numero di porta di default
+#define LENGTH 255 		// dimensione stringa
 
 // Funzione per gestire eventuali errori
 void errorHandler(char *messaggioDiErrore)

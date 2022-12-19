@@ -75,8 +75,8 @@ int main()
 
 	// Costruzione indririzzo del server
 	memset(&serverAddress, 0, sizeof(serverAddress));
-	serverAddress.sin_family = AF_INET; // famiglia di protocolli
-	serverAddress.sin_port = htons(PORT); // numeri di porta di default
+	serverAddress.sin_family = AF_INET;                     // famiglia di protocolli
+	serverAddress.sin_port = htons(PORT);                   // numeri di porta di default
 	serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); //indirizzo IP del server
 
 	// Binding della socket
@@ -89,8 +89,8 @@ int main()
 	char echoVowel[LENGTH];	 // vocale da stampare
 	char upperVowel[LENGTH]; // vocali convertite in maiuscolo da inviare
 	char *hostNameClient;    // hostname del client
-	struct hostent *host;	//struttura necessaria per utilizzare gethostbyaddr()
-
+	struct hostent *host;	 //struttura necessaria per utilizzare gethostbyaddr()
+  
 	while (true)
 	{
 
